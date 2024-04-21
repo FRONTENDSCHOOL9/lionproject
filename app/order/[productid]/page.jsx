@@ -1,11 +1,14 @@
-import React from 'react'
-
-function Order({params}) {
-  const {productid} = params;
-  console.log('[page Order] productid:',productid);
-  return (
-    <div>Order</div>
-  )
+"use client";
+import OrderForm from "@components/OrderForm";
+import React from "react";
+function Order({ params }) {
+	const { productid } = params;
+	return (
+		//갯수, 주소,
+		<div>
+			<OrderForm productid={productid}></OrderForm>
+		</div>
+	);
 }
 
-export default Order
+export default Order;
