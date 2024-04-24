@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Button from "./Button";
-import ProductCard from "./ProductCard";
+import ProductCard from "@components/ProductCard";
 import PropTypes from "prop-types";
 MyProductForm.propType = {
 	userId: PropTypes.number,
@@ -8,12 +7,11 @@ MyProductForm.propType = {
 
 async function getMyProducts(userId) {
 	try {
-		console.log(process.env.NEXT_PUBLIC_URL + `/api/user/${userId}/product`);
-		const res = await fetch(process.env.NEXT_PUBLIC_URL + `/api/user/${userId}/product`, {
+		const res = await fetch(`/api/user/product/${userId}`, {
 			cache: "force-cache",
 		});
 		const product = await res.json();
-		// console.log("product:", product.products.length);
+		console.log("product:", product.products.length);
 		return product.products;
 	} catch (error) {
 		console.log(error);
@@ -28,7 +26,9 @@ async function MyProductForm({ userId }) {
 			<br></br>
 			<div className="flex justify-between items-center">
 				<div className="text-3xl text-center">내 상품 목록</div>
-				<Link className="border-solid border-2 border-blue-200 rounded-md p-1 bg-blue-200" href={{ pathname: "/product/new" }}>상품 추가하기</Link>
+				<Link className="border-solid border-2 border-blue-200 rounded-md p-1 bg-blue-200" href={{ pathname: "/product/new" }}>
+					상품 추가하기
+				</Link>
 			</div>
 			<br></br>
 			<div className="grid grid-cols-5 gap-4">

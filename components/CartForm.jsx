@@ -1,6 +1,8 @@
 "use client";
 import PropTypes from "prop-types";
 import CartItem from "@/components/CartItem";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 CartForm.propType = {
 	result: PropTypes.object,
 	productid: PropTypes.number,
@@ -8,12 +10,31 @@ CartForm.propType = {
 let totalOrder = [];
 function CartForm({ result, refreshCart }) {
 	console.log("[CartForm] result:", result);
-
-  const itemList = result?.map(item => <CartItem key={item._id} item={item} refreshCart={refreshCart}></CartItem>);
-  
+	const { data: session } = useSession();
+	console.log("[CartForm] session:", session);
+  const [itemList, setItemList] = useState();
+	const getCart = async sessionUserId => {
+		try {
+			const res2 = await fetch(`/api/cart/${sessionUserId}`, {
+				method: "GET",
+				next: { revalidate: 300 },
+			});
+			const data = await res2.json();
+			console.log("[CartForm] data:", data);
+      setItemList(data);
+			return data;
+		} catch (error) {
+      console.log("[CartForm] error:", error);
+		}
+	};
+	useEffect(() => {
+    getCart(session?.user.userId);
+	}, []);
+	console.log("[CartForm] result:", result);
+  const List  = itemList?.map(item => <CartItem key={item._id} item={item} refreshCart={refreshCart}></CartItem>);
 	return (
-		<section className="p-4 ">
-			<table className="border-collapse table-fixed">
+		<section className=" p-4 ">
+			<table className="w-full border-collapse table-fixed">
 				<colgroup>
 					<col className="w-[10%] sm:w-[10%]" />
 					<col className="w-[40%] sm:w-[25%]" />
@@ -25,7 +46,7 @@ function CartForm({ result, refreshCart }) {
 					<col className="w-[5%] sm:w-[8%]" />
 				</colgroup>
 				<thead>
-					<tr className="border-b text-center border-solid border-gray-200">
+					<tr className="border-b text-sm text-center border-solid border-gray-200">
 						<th className="p-2 text-center ">상품사진</th>
 						<th className="p-2 text-center ">상품명</th>
 						<th className="p-2 text-center ">상품가격</th>
@@ -36,7 +57,7 @@ function CartForm({ result, refreshCart }) {
 						<th className="p-2 text-center hidden sm:table-cell">삭제</th>
 					</tr>
 				</thead>
-				<tbody className="w-full">{itemList}</tbody>
+				<tbody className="w-full">{List}</tbody>
 			</table>
 		</section>
 	);

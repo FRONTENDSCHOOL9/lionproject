@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { produce } from "immer";
 import { useRouter } from "next/navigation";
+import DaumPostcode from "react-daum-postcode";
+import Button from "@components/Button";
 const errorStyle = {
 	fontSize: "0.7rem",
 	color: "red",
@@ -15,27 +17,34 @@ function UserRegisterForm() {
 		handleSubmit,
 		reset,
 		formState: { errors },
+		setValue,
 	} = useForm({
 		defaultValues: {
 			type: "user",
 			password: "",
 		},
 	});
-  function stringify(obj) {
-    let cache = [];
-    let str = JSON.stringify(obj, function(key, value) {
-      if (typeof value === "object" && value !== null) {
-        if (cache.indexOf(value) !== -1) {
-          return;
-        }
-        cache.push(value);
-      }
-      return value;
-    });
-    cache = null;
-    return str;
-  }
+	function stringify(obj) {
+		let cache = [];
+		let str = JSON.stringify(obj, function (key, value) {
+			if (typeof value === "object" && value !== null) {
+				if (cache.indexOf(value) !== -1) {
+					return;
+				}
+				cache.push(value);
+			}
+			return value;
+		});
+		cache = null;
+		return str;
+	}
+
+	const handleComplete = data => {
+		setValue("address1", data.address);
+	};
+
 	const onSubmit = async formData => {
+		console.log("[UserRegisterForm] formData:", formData);
 		let newFormData = {};
 		if (formData.password1 !== formData.password2) {
 			alert("확인 비밀번호가 다릅니다.");
@@ -54,7 +63,7 @@ function UserRegisterForm() {
 				headers: {
 					"content-type": "application/json",
 				},
-				body: stringify(email)
+				body: stringify(email),
 			});
 			const { user } = await resUserExists.json();
 
@@ -69,38 +78,27 @@ function UserRegisterForm() {
 					"content-type": "application/json",
 				},
 				body: JSON.stringify({
-					...newFormData
+					...newFormData,
 				}),
 			});
 			if (res.ok) {
 				reset();
-				router.push("/");
+				alert("가입 완료 되었습니다.");
+				router.push("/login");
 			} else {
 				console.log("registration failed.");
 			}
 		} catch (error) {
 			console.log("error during registration.", error);
-      
-			// setSrvError(error);
 		}
-
-		// const res = await axios
-		// 	.post("/users", newFormData)
-		// 	.then(function (response) {
-		// 		console.log("데이터 가져오기 성공:", response.data);
-		// 	})
-		// 	.catch(function (error) {
-		// 		console.error("데이터 가져오기 실패:", error.response.data.message);
-		// 		setSrvError(error.response.data.message);
-		// 	});
-		// navigate(`/users/${res.data.item._id}/id`);
 	};
 	return (
-		<div className="flex items-center justify-center">
-			<div className="p-8 shadow-md rounded-lg w-full max-w-md dark:bg-gray-600">
+		<div className="flex items-center justify-center ">
+			<div className="p-8 shadow-md rounded-lg w-full max-w-md ">
 				<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
 					<label htmlFor="email">이메일</label>
 					<input
+						className="my-2 rounded-lg border-solid border-2 border-gray-400 dark:bg-gray-600 px-1"
 						name="email"
 						id="email"
 						type="email"
@@ -115,6 +113,7 @@ function UserRegisterForm() {
 					{errors && <div style={errorStyle}>{errors.email?.message}</div>}
 					<label htmlFor="password1">비밀번호</label>
 					<input
+						className="my-2 rounded-lg border-solid border-2 border-gray-400 dark:bg-gray-600 px-1"
 						name="password1"
 						id="password1"
 						type="password"
@@ -126,6 +125,7 @@ function UserRegisterForm() {
 					{errors && <div style={errorStyle}>{errors.password1?.message}</div>}
 					<label htmlFor="password2">비밀번호 확인</label>
 					<input
+						className="my-2 rounded-lg border-solid border-2 border-gray-400 dark:bg-gray-600 px-1"
 						name="password2"
 						id="password2"
 						type="password"
@@ -135,21 +135,23 @@ function UserRegisterForm() {
 						})}
 					/>
 					{errors && <div style={errorStyle}>{errors.password2?.message}</div>}
-					<label htmlFor="">이름</label>
-					<input name="name" id="name" type="text" {...register("name", { required: "이름 필수 입니다.", minLength: 2 })} />
-					{errors && <div style={errorStyle}>{errors.name?.message}</div>}
-					<label htmlFor="type">가입유형</label>
-					<select name="type" id="type" {...register("type", { required: "가입유형 필수 입니다." })}>
-						<option value="user">일반사용자</option>
-						<option value="seller">판매자</option>
-					</select>
-					{errors && <div style={errorStyle}>{errors.type?.message}</div>}
+					<div className="w-full">
+						<label htmlFor="">이름</label>
+						<input className="rounded-lg border-solid border-2 border-gray-400 dark:bg-gray-600 mt-3 mx-3 px-1" name="name" id="name" type="text" {...register("name", { required: "이름 필수 입니다.", minLength: 2 })} />
+						{errors && <div style={errorStyle}>{errors.name?.message}</div>}
+						<label htmlFor="type">가입유형</label>
+						<select className="mt-3 rounded-lg border-solid border-2 my-3 mx-2 border-gray-400 dark:bg-gray-600" name="type" id="type" {...register("type", { required: "가입유형 필수 입니다." })}>
+							<option value="user">일반사용자</option>
+							<option value="seller">판매자</option>
+						</select>
+						{errors && <div style={errorStyle}>{errors.type?.message}</div>}
+					</div>
 
-					<label htmlFor="phone">휴대전화 번호(-제외): </label>
-					<div style={{ display: "flex", alignItems: "center" }}>
-						<p>010</p>
+					<div className="flex items-center">
+					<label htmlFor="phone">휴대전화</label>
+						<p className="ml-2">010-</p>
 						<input
-							style={{ height: "1rem" }}
+							className="w-fit rounded-lg border-solid border-2 border-gray-400 dark:bg-gray-600 mx-2 px-1"
 							type="tel"
 							id="phone"
 							name="phone"
@@ -164,14 +166,25 @@ function UserRegisterForm() {
 						/>
 					</div>
 					{errors && <div style={errorStyle}>{errors.phone?.message}</div>}
-					<label htmlFor="">주소</label>
-					<input name="address" id="address" type="text" {...register("address", { required: "주소 필수 입니다." })} />
+					<div className="w-full my-3">
+						<div className="w-full text-xl flex flex-col justify-center items-start">
+							<label htmlFor="address">주소</label>
+							<input className="w-full rounded-lg my-3 border-solid border-2 border-gray-300 dark:bg-gray-600" type="text" name="address1" id="address1" readOnly={true} {...register("address1", { required: "배송주소를 입력해주세요." })}></input>
+							<DaumPostcode onComplete={handleComplete} />
+						</div>
+						<div className="w-full my-3">
+							<label htmlFor="address">나머지 주소</label>
+							<input className="rounded-lg w-full border-solid border-2 border-gray-300 dark:bg-gray-600" type="text" name="address2" id="address2" {...register("address2", { required: "나머지 주소를 입력해주세요." })}></input>
+						</div>
+					</div>
 					{errors && <div style={errorStyle}>{errors.address?.message}</div>}
-
-					<button type="submit">가입하기</button>
-					<button type="button" onClick={() => reset()}>
-						취소
-					</button>
+              
+					<div className="flex items-center justify-center gap-3">
+            <Button type="submit">가입하기</Button>
+            <Button type="button" onClick={() => reset()}>
+              취소
+            </Button>
+          </div>
 					{srvError && <div style={{ color: "red", fontSize: "10px" }}>{srvError}</div>}
 				</form>
 			</div>

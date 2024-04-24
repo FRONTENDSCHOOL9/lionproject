@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import Image from "next/image";
-import Button from "./Button";
+import Button from "@components/Button";
 import { useRouter } from "next/navigation";
 import { useRecoilState } from "recoil";
 import { saveCart } from "@utils/atom";
@@ -15,25 +15,25 @@ CartItem.propType = {
 //order 화면으로 가도록
 function CartItem({ item, refreshCart }) {
 	const [cart, setCart] = useRecoilState(saveCart);
-	const [quantity, setQuantity] = useState(1);
-  const [fileName, setFileName] = useState();
+	const [quantity, setQuantity] = useState(0);
+	const [fileName, setFileName] = useState();
 	const [product, setProduct] = useState("");
 	const [totalPrice, setTotalPrice] = useState(0);
-  const router = useRouter();
-  if (isNaN(totalPrice)) {
-    console.log("[CartItem] val nan:", totalPrice);
-    setTotalPrice(0);
-  }
-	// console.log("[CartItem] item:", item);
+	const router = useRouter();
+	if (isNaN(totalPrice)) {
+		console.log("[CartItem] val nan:", totalPrice);
+		setTotalPrice(0);
+	}
+	console.log("[CartItem] item:", item);
 	const getProduct = async () => {
 		try {
-			const res = await fetch(process.env.NEXT_PUBLIC_URL + `/api/product/${item.product_id}`, {
+			const res = await fetch(`/api/product/${item.product_id}`, {
 				method: "GET",
 				next: { revalidate: 300 },
 			});
 			const data = await res.json();
 			setProduct(data.product);
-      setFileName('/assets/images/' + data.product.mainImages[0]?.fileName);
+			setFileName("/assets/images/" + data.product.mainImages[0]?.fileName);
 			console.log("[CartItem] product:", data.product.mainImages[0]);
 			return data.product;
 		} catch (error) {
@@ -42,18 +42,18 @@ function CartItem({ item, refreshCart }) {
 	};
 	const deleteCartItem = async () => {
 		try {
-			const res = await fetch(process.env.NEXT_PUBLIC_URL + `/api/cart/${item._id}`, {
+			const res = await fetch(`/api/cart/${item._id}`, {
 				method: "DELETE",
 			});
 			const result = await res.json();
 			console.log("[CartItem] result:", result);
-			location.reload();
+			router.push(`/cart/0`);
 		} catch (error) {
 			console.log("[CartItem] error:", error);
 		}
 	};
 	useEffect(() => {
-    if (isNaN(totalPrice)) {
+		if (isNaN(totalPrice)) {
 			console.log("[CartItem] val nan:", totalPrice);
 			setTotalPrice(0);
 		}
@@ -66,7 +66,7 @@ function CartItem({ item, refreshCart }) {
 		let val = parseInt(e.target.value, 10);
 		if (isNaN(val)) {
 			console.log("[CartItem] val nan:", val);
-			setTotalPrice(0);
+			setTotalPrice(product?.price);
 		} else {
 			setQuantity(e.target.value);
 		}
@@ -74,10 +74,10 @@ function CartItem({ item, refreshCart }) {
 
 	return (
 		<tr className="border-solid border-2  text-center self-center">
-      <td className="self-center"> {!fileName?<div>로딩중</div>:<Image src={fileName} alt="image" width={100} height={100} />}</td>
-			<td className="self-center">{product.name}</td>
-			<td className="self-center">{product.price}</td>
-			<td className="self-center">{product.shippingFees}</td>
+			<td className="self-center"> {!fileName ? <div>로딩중</div> : <Image src={fileName} alt="image" width={100} height={100} />}</td>
+			<td className="self-center">{product?.name}</td>
+			<td className="self-center">{product?.price}</td>
+			<td className="self-center">{product?.shippingFees}</td>
 			<td className="self-center">
 				<input
 					className="w-10 border-solid border-2"
@@ -85,7 +85,7 @@ function CartItem({ item, refreshCart }) {
 					name="quantity"
 					id="quantity"
 					min="0"
-          value={quantity}
+					value={quantity}
 					onChange={e => {
 						handleQuantity(e);
 					}}

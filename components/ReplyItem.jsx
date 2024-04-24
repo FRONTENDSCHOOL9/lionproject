@@ -1,7 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import PropTypes from "prop-types";
-import Button from "./Button";
+import Button from "@components/Button";
 import { useEffect, useState } from "react";
 
 ReplyItem.propTypes = {
@@ -12,36 +12,36 @@ function ReplyItem({ replyItem }) {
 	const { data: session } = useSession();
 	const [userInfo, setUserInfo] = useState();
 	const [membershipClass, setMembershipClass] = useState();
-	console.log("session:", session);
 	const getUser = async () => {
 		try {
-			const res = await fetch(`/api/user/${replyItem.user_id}`);
+			const res = await fetch(`/api/user/${replyItem.user_id}`, {
+				cache: "force-cache",
+			});
 			const data = await res.json();
+			const res2 = await fetch(`/api/code/membershipClass`, {
+				cache: "force-cache",
+			});
+			const data2 = await res2.json();
+			const codes = data2.codes;
+			console.log("[ReplyItem component] codes:", codes);
 			setUserInfo(data.user);
-		} catch (error) {
-		}
-	};
-	const getCode = async () => {
-		try {
-			const res = await fetch(`/api/code/membershipClass`);
-			const data = await res.json();
-			data.codes.map(item => {
-				if (item.code == userInfo?.extra?.membershipClass) {
-					setMembershipClass(item.value);
+			const membership = codes.filter(item => {
+				if (item.code == userInfo?.extra.membershipClass) {
+					return item;
 				}
 			});
-		} catch (error) {
-			console.log("[ReplyItem component]error:", error);
-		}
+			console.log("[ReplyItem component] membershipClass:", membership[0].value);
+			setMembershipClass(membership[0].value);
+			console.log("[ReplyItem component] userInfo:", userInfo);
+		} catch (error) {}
 	};
 	useEffect(() => {
 		getUser();
-		getCode();
 	}, []);
 
 	async function deleteReply() {
 		try {
-			const res = fetch(process.env.NEXT_PUBLIC_URL + `/api/reply/${replyItem.reply_id}`, {
+			const res = fetch(`/api/reply/${replyItem.reply_id}`, {
 				method: "DELETE",
 			});
 			return res;
@@ -51,11 +51,10 @@ function ReplyItem({ replyItem }) {
 	}
 	return (
 		<tr>
-			<td>{userInfo.name||session.user.name}</td>
-			<td className="p-2 text-center text-[10px] hidden sm:table-cell">{membershipClass}</td>
+			<td>{userInfo?.name || session?.user.name}</td>
 			<td> {replyItem.content}</td>
 			<td className="flex items-center justify-between text-sm">
-				<div className="p-2 text-center hidden sm:table-cell"> {replyItem.createdAt}</div>
+				<div className="p-1 text-center hidden sm:table-cell"> {replyItem.createdAt}</div>
 				{session?.userId == replyItem?.user_id ? (
 					<Button type="button" size="xs" onClick={deleteReply}>
 						삭제

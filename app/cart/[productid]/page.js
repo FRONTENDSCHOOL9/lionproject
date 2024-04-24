@@ -20,7 +20,7 @@ function Cart({ params }) {
 		}
 		try {
 			console.log('[CartForm] addCart userId:', sessionUserId);
-			const res = await fetch(process.env.NEXT_PUBLIC_URL + `/api/cart/`, {
+			const res = await fetch(`/api/cart/`, {
 				method: "POST",
 				body: JSON.stringify({ product_id: productid, user_id: sessionUserId }),
 			});
@@ -35,9 +35,7 @@ function Cart({ params }) {
 			sessionUserId = userId2;
 		}
 		try {
-			console.log("[CartForm] getCart userId:", sessionUserId);
-			console.log(process.env.NEXT_PUBLIC_URL + `/api/cart/${sessionUserId}`);
-			const res2 = await fetch(process.env.NEXT_PUBLIC_URL + `/api/cart/${sessionUserId}`, {
+			const res2 = await fetch(`/api/cart/${sessionUserId}`, {
 				method: "GET",
 				next: { revalidate: 300 },
 			});
@@ -53,13 +51,16 @@ function Cart({ params }) {
     if(!sessionUserId){
       setUserId(userId2);
     }
-		addCart();
+    if(productid!=0){
+      console.log('[Cart] inside id == 0 productid, userid:', productid, sessionUserId);
+      addCart();
+    }
 		getCart(sessionUserId);
 	}, []);
 
 	return (
 		<div>
-			<div className="flex flex-col items-center justify-center">
+			<div className="my-5 flex flex-col items-center justify-center">
 				<div className="text-6xl">장바구니</div>
 				{cartProducts && <CartForm result={cartProducts}></CartForm>}
 			</div>
